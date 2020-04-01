@@ -6,7 +6,7 @@
 
 
 # REPLACE THIS as your github.io structure
-posts_folder_path='_posts'
+posts_folder_path='_posts' # 여기서 /을 앞에 넣으면 안됨. 이미지 경로 할때는 앞에 / 넣어줘야 url상에서 image폴더 찾을 수 있지만 로컬에서 실행할때는 루트로 들어가기에...
 images_folder_path='assets/images'
 
 # Name regexp of exported zip file from Notion
@@ -22,7 +22,7 @@ unzd() {
     if [[ $# != 1 ]]; then echo I need a single argument, the name of the archive to extract; return 1; fi
     target="${1%.zip}"
     if [ -d "$target" ]; then # 압축 풀린 폴더가 존재할 경우, 
-        echo "There are folder have same name. We don't do unzip"
+        echo "There are folder have same name. So we don't do unzip"
     else
         unzip -qq "$1" -d "${target##*/}" # -qq outputting 없이 수행
     fi
@@ -43,12 +43,14 @@ fi
 # Exported folder 별로 다음을 시행
 for exported_foldername in ${exported_foldername_array[*]}; do
     
+    # 적용안함 : 파일명에 공백있는 경우: 문제가 생길 수 있으므로 파일명에 있는 공백을 '_'로 바꿔줌
+    #for f in $exported_foldername/*\ *
+    #do mv "$f" "${f// /_}"; done
+
     # exported_filename 추출하기
     exported_filename=""
     for entry in ./$exported_foldername/*.md
-    do
-        exported_filename="$(basename ${entry%.*})"
-    done
+        do exported_filename=$(basename "${entry%.*}"); done #여기서 ""안해주면 파일명에 공백있을경우 앞만 받아옴. 꼭 해주기
 
     exported_file_path="$exported_foldername/$exported_filename.md"
 
@@ -58,19 +60,21 @@ for exported_foldername in ${exported_foldername_array[*]}; do
     	echo -n "Enter a title of the post:"
         read  meta_title
     fi
+    meta_title=$(echo "$meta_title" | sed 's/# //g')
+    
+    echo "For the \"$meta_title\" post..."
 
-    echo "For the $meta_title post..."
     # Title값은 URL에 사용될 것이므로 기호가 포함되어 있다면 변환해줌. 
     # 일반 URL encoding써도 되지만 한글도 모두 변환되어 버리기에 임의로 기호를 바꿔줌
-    meta_title_fix=$(echo "$meta_title" | sed 's/[][\\^*+=,!?.:;&@()$-]/-/g' | sed 's/# //g' | sed 's/ /-/g' | sed 's/--/-/g')
+    meta_title_encoded=$(echo "$meta_title" | sed 's/[][\\^*+=,!?.:;&@()$-]/-/g' | sed 's/# //g' | sed 's/ /-/g' | sed 's/--/-/g')
 
 
     # Jekyll에서 사용되는 meta 정보 추가하기
-    echo -n "Enter a subtitle of the post:"
+    echo -n "Enter a subtitle: "
     read  meta_subtitle
-    echo -n "Enter categories of the post:"
+    echo -n "Enter categories: "
     read  meta_categories
-    echo -n "Enter tags of the post:"
+    echo -n "Enter tags: "
     read  meta_tags
 
     meta_date="$(date +%Y)-$(date +%m)-$(date +%d) $(date +%H):$(date +%M):$(date +%S) +0000"
@@ -90,10 +94,11 @@ for exported_foldername in ${exported_foldername_array[*]}; do
 
 
     # Making a post file name
-    fixed_filename="$(date +%Y)-$(date +%m)-$(date +%d)-$meta_title_fix"
+    fixed_filename="$(date +%Y)-$(date +%m)-$(date +%d)-$meta_title_encoded"
 
     # Changing a image path in exported_filename.md
-    sed -i '' "s|"$exported_filename"/Untitled|/$images_folder_path/$fixed_filename/Untitled|g" "$exported_file_path"
+    exported_filename_for_images_path=$(echo "$exported_filename" | sed 's/ /%20/g') # 파일명에 공백있는 경우: %20으로 수정. 추후 md 내 이미지 경로에 이용
+    sed -i '' "s|"$exported_filename_for_images_path"/Untitled|/$images_folder_path/$fixed_filename/Untitled|g" "$exported_file_path"
 
 
     # Changing a file name and move
@@ -112,7 +117,7 @@ for exported_foldername in ${exported_foldername_array[*]}; do
     rm -r "$exported_foldername"
     rm -r "$exported_foldername.zip"
 
-    echo -e "Work for the $first_line post is completed!\n"
+    echo -e "Work for the $meta_title post is completed!\n"
 done
 
 

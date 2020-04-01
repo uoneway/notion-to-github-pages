@@ -30,7 +30,9 @@ Notion에서 페이지 export만 해주면, 명령어 한 번으로 이미지까
 
         `bash notion_to_github_pages.sh`
 
-5. 화면 설명에 따라 jekyll 메타정보(subtitlem categories, tags)를 차례로 입력해주면 처리가 완료됩니다.(git add까지 처리됨)
+5. (optional) 화면 설명에 따라 jekyll 메타정보(subtitlem categories, tags)를 차례로 입력해주면 처리가 완료됩니다.
+- 메타정보를 넣고싶지 않다면 그냥 엔터를 누르시면 됩니다.
+- 이 단계를 통해 *git add*까지 자동처리됩니다.
    ![./assets/images/2020-03-31-README/Untitled%201.png](./assets/images/2020-03-31-README/Untitled%201.png)
 
 
